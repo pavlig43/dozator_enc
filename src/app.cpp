@@ -35,6 +35,7 @@ void App::init() {
   // Остальное лениво инициализируют экраны при первом входе.
   display.init();
   remote.init();
+  targetMemory.init();
   showMenu();
 }
 

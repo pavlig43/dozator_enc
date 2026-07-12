@@ -10,12 +10,18 @@
 #define EEPROM_TARGET_MARKER 0x5A
 
 void TargetMemory::init() {
+  if (initialized) {
+    return;
+  }
+
   if (EEPROM.read(EEPROM_TARGET_MARKER_ADDRESS) != EEPROM_TARGET_MARKER) {
     targetWeight = 50;
+    initialized = true;
     return;
   }
 
   EEPROM.get(EEPROM_TARGET_VALUE_ADDRESS, targetWeight);
+  initialized = true;
 }
 
 void TargetMemory::save(unsigned long weight) {
