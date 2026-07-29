@@ -4,7 +4,7 @@
 namespace {
 const ScreenId MENU_ORDER[] = {
   ScreenId::WEIGHT_INPUT,
-  ScreenId::ANGLE_SETTINGS,
+  ScreenId::FEED_SETTINGS,
   ScreenId::SCALE_CALIBRATION,
   ScreenId::WORK
 };
@@ -13,72 +13,63 @@ const byte MENU_SCREEN_COUNT = sizeof(MENU_ORDER) / sizeof(MENU_ORDER[0]);
 }
 
 App::App()
-  // Здесь только связываем объекты между собой.
-  // Реальная инициализация железа находится в init()/enter() нужного экрана.
-  : angleSettings(servo, servoMemory),
-    dosing(servo, servoMemory, scale, motor, targetMemory),
-    weightInputScreen(display, targetMemory, navigation),
-    angleSettingsScreen(display, angleSettings, navigation),
+  : dosing(scale, auger, targetMemory, feedMemory),
+    weightInputScreen(display, targetMemory),
+    feedSettingsScreen(display, feedMemory),
     scaleCalibrationScreen(display, scale),
-    workScreen(display, scale, rgb, dosing, targetMemory, navigation, servo) {
+    workScreen(display, scale, rgb, dosing, targetMemory) {
 }
 
 App& app() {
-  // Локальный static создаётся при первом обращении из Arduino setup().
-  // Так в заголовке нет глобальной переменной App, и IDE не ругается на неё.
   static App instance;
   return instance;
 }
 
 void App::init() {
-  // Host поднимает только то, без чего нельзя показать первый экран и читать кнопки.
-  // Остальное лениво инициализируют экраны при первом входе.
   display.init();
-  remote.init();
+  controls.init();
   targetMemory.init();
+  feedMemory.init();
   showMenu();
 }
 
 void App::loop() {
-  const Button button = remote.read();
+  const ControlEvent event = controls.read();
 
   if (menuActive) {
-    handleMenuButton(button);
+    handleMenuEvent(event);
     return;
   }
 
-  // Порядок важен: экран сначала получает кнопку и может запросить переход.
-  // Потом App применяет переход, и loop() вызывается уже у актуального экрана.
-  handleButton(button);
-  applyNavigation();
+  if (event == ControlEvent::MENU) {
+    openMenu(navigation.current());
+    return;
+  }
+
+  handleEvent(event);
   loopCurrentScreen();
 }
 
-void App::handleButton(Button button) {
-  if (button == Button::NONE) {
-    return;
-  }
-
-  if (button == Button::CONFIRM) {
-    openMenu(navigation.current());
+void App::handleEvent(ControlEvent event) {
+  if (event == ControlEvent::NONE) {
     return;
   }
 
   switch (navigation.current()) {
   case ScreenId::WEIGHT_INPUT:
-    weightInputScreen.handleButton(button);
+    weightInputScreen.handleEvent(event);
     break;
 
-  case ScreenId::ANGLE_SETTINGS:
-    angleSettingsScreen.handleButton(button);
+  case ScreenId::FEED_SETTINGS:
+    feedSettingsScreen.handleEvent(event);
     break;
 
   case ScreenId::SCALE_CALIBRATION:
-    scaleCalibrationScreen.handleButton(button);
+    scaleCalibrationScreen.handleEvent(event);
     break;
 
   case ScreenId::WORK:
-    workScreen.handleButton(button);
+    workScreen.handleEvent(event);
     break;
   }
 }
@@ -89,8 +80,8 @@ void App::loopCurrentScreen() {
     weightInputScreen.loop();
     break;
 
-  case ScreenId::ANGLE_SETTINGS:
-    angleSettingsScreen.loop();
+  case ScreenId::FEED_SETTINGS:
+    feedSettingsScreen.loop();
     break;
 
   case ScreenId::SCALE_CALIBRATION:
@@ -109,8 +100,8 @@ void App::enterCurrentScreen() {
     weightInputScreen.enter();
     break;
 
-  case ScreenId::ANGLE_SETTINGS:
-    angleSettingsScreen.enter();
+  case ScreenId::FEED_SETTINGS:
+    feedSettingsScreen.enter();
     break;
 
   case ScreenId::SCALE_CALIBRATION:
@@ -124,46 +115,34 @@ void App::enterCurrentScreen() {
 }
 
 void App::exitCurrentScreen() {
-  if (navigation.current() == ScreenId::WEIGHT_INPUT) {
+  switch (navigation.current()) {
+  case ScreenId::WEIGHT_INPUT:
     weightInputScreen.exit();
-  }
-  else if (navigation.current() == ScreenId::WORK) {
+    break;
+
+  case ScreenId::FEED_SETTINGS:
+    feedSettingsScreen.exit();
+    break;
+
+  case ScreenId::WORK:
     workScreen.exit();
-  }
-  else if (navigation.current() == ScreenId::ANGLE_SETTINGS) {
-    angleSettingsScreen.exit();
-  }
-}
+    break;
 
-void App::applyNavigation() {
-  // Экраны не переключаются сами напрямую: они только просят Navigation открыть экран.
-  // Commit происходит здесь, чтобы enter/exit всегда выполнялись в одном месте.
-  if (!navigation.hasPendingChange()) {
-    return;
+  case ScreenId::SCALE_CALIBRATION:
+    break;
   }
-
-  exitCurrentScreen();
-  navigation.commit();
-  selectedScreen = navigation.current();
-  enterCurrentScreen();
 }
 
 void App::showMenu() {
   display.showMenu(selectedScreen);
 }
 
-void App::handleMenuButton(Button button) {
-  if (button == Button::NONE) {
-    return;
-  }
-
-  if (button == Button::PREV || button == Button::NEXT) {
-    selectMenuByButton(button);
+void App::handleMenuEvent(ControlEvent event) {
+  if (event == ControlEvent::LEFT || event == ControlEvent::RIGHT) {
+    selectMenuByEvent(event);
     showMenu();
-    return;
   }
-
-  if (button == Button::CONFIRM) {
+  else if (event == ControlEvent::SELECT) {
     openSelectedScreen();
   }
 }
@@ -180,7 +159,9 @@ void App::openScreen(ScreenId screen) {
   }
 
   navigation.open(screen);
-  applyNavigation();
+  navigation.commit();
+  selectedScreen = navigation.current();
+  enterCurrentScreen();
 }
 
 void App::openMenu(ScreenId screen) {
@@ -190,14 +171,14 @@ void App::openMenu(ScreenId screen) {
   showMenu();
 }
 
-void App::selectMenuByButton(Button button) {
-  selectedScreen = menuScreenByButton(selectedScreen, button);
+void App::selectMenuByEvent(ControlEvent event) {
+  selectedScreen = menuScreenByEvent(selectedScreen, event);
 }
 
-ScreenId App::menuScreenByButton(ScreenId screen, Button button) {
+ScreenId App::menuScreenByEvent(ScreenId screen, ControlEvent event) {
   for (byte i = 0; i < MENU_SCREEN_COUNT; i++) {
     if (MENU_ORDER[i] == screen) {
-      if (button == Button::PREV) {
+      if (event == ControlEvent::LEFT) {
         return MENU_ORDER[(i + MENU_SCREEN_COUNT - 1) % MENU_SCREEN_COUNT];
       }
 

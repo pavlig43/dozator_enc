@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "ir.h"
+#include "controls.h"
 #include "lsd.h"
 #include "scale_sensor.h"
 #include "tmr.h"
@@ -10,9 +10,9 @@
 class ScaleCalibrationScreen {
 public:
   ScaleCalibrationScreen(Display& display, Scale& scale);
-  void enter(); // Показывает первый шаг: нажать EQ для нуля.
+  void enter();
   void loop(); // Ведёт сценарий: ноль, груз 1 кг, сохранение.
-  void handleButton(Button button); // EQ запускает обнуление.
+  void handleEvent(ControlEvent event);
 
 private:
   enum class Step : byte {

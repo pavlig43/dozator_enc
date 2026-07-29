@@ -22,7 +22,7 @@ void ScaleCalibrationScreen::enter() {
   step = Step::WAIT_TARE;
   stableRaw = 0;
   stableCount = 0;
-  display.showScaleCalibrationEq();
+  display.showScaleCalibrationStart();
   screenTimer.reset();
 }
 
@@ -39,8 +39,8 @@ void ScaleCalibrationScreen::loop() {
   }
 }
 
-void ScaleCalibrationScreen::handleButton(Button button) {
-  if (button == Button::CLEAR && step == Step::WAIT_TARE) {
+void ScaleCalibrationScreen::handleEvent(ControlEvent event) {
+  if (event == ControlEvent::SELECT && step == Step::WAIT_TARE) {
     beginTare();
   }
 }

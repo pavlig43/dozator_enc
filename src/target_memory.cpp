@@ -21,15 +21,26 @@ void TargetMemory::init() {
   }
 
   EEPROM.get(EEPROM_TARGET_VALUE_ADDRESS, targetWeight);
+
+  if (targetWeight > 99999UL) {
+    targetWeight = 50UL;
+  }
+
+  targetWeight = normalize(targetWeight);
   initialized = true;
 }
 
 void TargetMemory::save(unsigned long weight) {
-  targetWeight = weight;
+  targetWeight = normalize(weight);
   EEPROM.put(EEPROM_TARGET_VALUE_ADDRESS, targetWeight);
   EEPROM.update(EEPROM_TARGET_MARKER_ADDRESS, EEPROM_TARGET_MARKER);
 }
 
 unsigned long TargetMemory::weight() const {
   return targetWeight;
+}
+
+unsigned long TargetMemory::normalize(unsigned long weight) {
+  const unsigned long clamped = constrain(weight, MIN_TARGET_GRAMS, MAX_TARGET_GRAMS);
+  return ((clamped + TARGET_STEP_GRAMS / 2) / TARGET_STEP_GRAMS) * TARGET_STEP_GRAMS;
 }

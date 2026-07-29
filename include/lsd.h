@@ -1,23 +1,19 @@
 #pragma once
+
 #include <Arduino.h>
-#include "angle_settings.h"
 #include "navigation.h"
 
-// Display - единственный слой, который напрямую рисует на LCD.
-// Экраны говорят ему, что показать, но не работают с LiquidCrystal_I2C напрямую.
 class Display {
 public:
-  void init(); // Инициализирует LCD и показывает стартовую надпись.
-  void showLoading(); // Экран загрузки.
-  void showMenu(ScreenId selectedScreen); // Меню выбора экрана.
-  void showTare(); // Короткое сообщение во время тарирования.
-  void showScaleCalibrationEq(); // Первый шаг калибровки весов.
-  void showScaleCalibrationWeight(); // Просит поставить груз 1 кг.
-  void showScaleCalibrationDone(); // Калибровка сохранена.
-  void showWeightInput(const byte digits[5], byte cursor); // Полный экран ввода веса.
-  void updateDigits(const byte digits[5]); // Обновляет только строку цифр.
-  void updateCursor(byte cursor); // Обновляет только указатель курсора.
-  void showWork(long currentWeight, unsigned long targetWeight, bool showChHint); // Полный рабочий экран.
-  void updateCurrentWeight(long currentWeight, bool showChHint); // Обновляет только текущий вес.
-  void showAngleSettings(AngleSettingKind kind, int value); // Экран текущей настройки заслонки.
+  void init();
+  void showLoading();
+  void showMenu(ScreenId selectedScreen);
+  void showTare();
+  void showScaleCalibrationStart();
+  void showScaleCalibrationWeight();
+  void showScaleCalibrationDone();
+  void showWeightInput(unsigned long targetWeight);
+  void showFeedSettings(unsigned int stopMarginGrams);
+  void showWork(long currentWeight, unsigned long targetWeight, bool showStartHint);
+  void updateCurrentWeight(long currentWeight, bool showStartHint);
 };

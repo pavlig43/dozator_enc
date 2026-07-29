@@ -1,41 +1,36 @@
 #pragma once
 
-#include "ir.h"
-#include "motor_driver.h"
+#include <Arduino.h>
+#include "auger_motor.h"
+#include "feed_memory.h"
 #include "scale_sensor.h"
-#include "servo_memory.h"
-#include "servo_motor.h"
 #include "target_memory.h"
 #include "tmr.h"
 
-// Рабочий автомат дозирования.
-// Он не знает про экран и кнопки: только управляет серво и мотором по текущему весу.
 class DosingController {
 public:
-  DosingController(Servo& servo, ServoMemory& servoMemory, Scale& scale, Motor& motor, TargetMemory& targetMemory);
-  void init(); // Готовит серво-память, серво и мотор для рабочего режима.
-  void loop(); // Один шаг автомата дозирования.
-  void start(); // Запуск основной подачи.
-  void stop(); // Безопасная остановка: закрыть заслонку и выключить мотор.
-  bool isDosing() const; // true, пока автомат не в IDLE.
+  DosingController(Scale& scale, AugerMotor& auger, TargetMemory& targetMemory, FeedMemory& feedMemory);
+  void init();
+  void loop();
+  void start();
+  void stop();
+  bool isDosing() const;
 
 private:
   enum class State : byte {
-    IDLE,      // Дозирование остановлено: заслонка закрыта, мотор выключен.
-    MAIN_FILL, // Быстрая основная подача до подхода к цели.
-    WAIT,      // Единая пауза после любой подачи, пока вес стабилизируется.
-    SLOW_FILL  // Короткая медленная досыпка через slowAngle.
+    IDLE,
+    MAIN_FILL,
+    WAIT,
+    SLOW_FILL
   };
 
-  Servo& servo;
-  ServoMemory& servoMemory;
   Scale& scale;
-  Motor& motor;
+  AugerMotor& auger;
   TargetMemory& targetMemory;
-  State state = State::IDLE; // Текущее состояние автомата.
-  Tmr waitTimer; // Пауза стабилизации веса после остановки подачи.
-  Tmr slowFillTimer; // Длительность одного короткого импульса досыпки.
+  FeedMemory& feedMemory;
+  State state = State::IDLE;
+  Tmr waitTimer;
+  Tmr slowFillTimer;
 
-  void setState(State nextState); // Меняет состояние и сбрасывает нужный таймер.
-  int mainFillAngle(long remainingWeight) const; // Подбирает угол основной подачи по остатку.
+  void setState(State nextState);
 };

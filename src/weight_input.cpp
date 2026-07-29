@@ -1,51 +1,35 @@
 #include <Arduino.h>
-#include <string.h>
 #include "weight_input.h"
 
 void WeightInput::setTargetWeight(unsigned long weight) {
-  for (int i = 4; i >= 0; i--) {
-    digits[i] = weight % 10;
-    weight /= 10;
-  }
+  value = normalize(weight);
 }
 
-void WeightInput::handleButton(Button button) {
-  if (button == Button::PREV) {
-    cursor = (cursor + 4) % 5;
+void WeightInput::handleEvent(ControlEvent event) {
+  long nextValue = (long)value;
+
+  if (event == ControlEvent::LEFT) {
+    nextValue -= TARGET_STEP_GRAMS;
+  }
+  else if (event == ControlEvent::RIGHT) {
+    nextValue += TARGET_STEP_GRAMS;
+  }
+  else {
     return;
   }
 
-  if (button == Button::NEXT) {
-    cursor = (cursor + 1) % 5;
-    return;
-  }
-
-  if (button == Button::CLEAR) {
-    memset(digits, 0, sizeof(digits));
-    cursor = 0;
-    return;
-  }
-
-  const int digit = IrRemote::digit(button);
-  if (digit >= 0) {
-    digits[cursor] = digit;
-  }
+  value = constrain(nextValue, MIN_TARGET_GRAMS, MAX_TARGET_GRAMS);
 }
 
 unsigned long WeightInput::targetWeight() const {
-  unsigned long value = 0;
-
-  for (byte i = 0; i < 5; i++) {
-    value = value * 10 + digits[i];
-  }
-
   return value;
 }
 
-const byte* WeightInput::getDigits() const {
-  return digits;
-}
-
-byte WeightInput::getCursor() const {
-  return cursor;
+unsigned long WeightInput::normalize(unsigned long weight) {
+  const unsigned long clamped = constrain(
+    weight,
+    (unsigned long)MIN_TARGET_GRAMS,
+    (unsigned long)MAX_TARGET_GRAMS
+  );
+  return ((clamped + TARGET_STEP_GRAMS / 2) / TARGET_STEP_GRAMS) * TARGET_STEP_GRAMS;
 }

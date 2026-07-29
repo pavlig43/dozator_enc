@@ -1,14 +1,11 @@
 #include "weight_input_screen.h"
 
-WeightInputScreen::WeightInputScreen(Display& display, TargetMemory& targetMemory, Navigation& navigation)
+WeightInputScreen::WeightInputScreen(Display& display, TargetMemory& targetMemory)
   : display(display),
-    targetMemory(targetMemory),
-    navigation(navigation) {
+    targetMemory(targetMemory) {
 }
 
 void WeightInputScreen::init() {
-  // EEPROM читаем один раз. После этого пользователь может менять цифры на экране,
-  // и повторный enter() не должен внезапно вернуть старое сохранённое значение.
   if (initialized) {
     return;
   }
@@ -20,55 +17,21 @@ void WeightInputScreen::init() {
 
 void WeightInputScreen::enter() {
   init();
-  // При входе рисуем весь экран, а дальше loop() обновляет только изменённые части.
-  display.showWeightInput(input.getDigits(), input.getCursor());
-  rememberDisplayedDigits();
-  displayedCursor = input.getCursor();
+  display.showWeightInput(input.targetWeight());
 }
 
 void WeightInputScreen::exit() {
-  const unsigned long targetWeight = input.targetWeight();
-  if (targetWeight > 0) {
-    targetMemory.save(targetWeight);
-  }
+  targetMemory.save(input.targetWeight());
 }
 
 void WeightInputScreen::loop() {
-  if (digitsNeedRedraw()) {
-    display.updateDigits(input.getDigits());
-    rememberDisplayedDigits();
-  }
-
-  if (input.getCursor() != displayedCursor) {
-    display.updateCursor(input.getCursor());
-    displayedCursor = input.getCursor();
-  }
 }
 
-void WeightInputScreen::handleButton(Button button) {
-  // Все обычные кнопки редактирования остаются внутри WeightInput.
-  input.handleButton(button);
-}
+void WeightInputScreen::handleEvent(ControlEvent event) {
+  const unsigned long oldValue = input.targetWeight();
+  input.handleEvent(event);
 
-void WeightInputScreen::rememberDisplayedDigits() {
-  // Запоминаем то, что уже отправили на LCD, для точечного обновления.
-  const byte* digits = input.getDigits();
-
-  for (byte i = 0; i < 5; i++) {
-    displayedDigits[i] = digits[i];
+  if (input.targetWeight() != oldValue) {
+    display.showWeightInput(input.targetWeight());
   }
-}
-
-bool WeightInputScreen::digitsNeedRedraw() const {
-  // LCD медленный, поэтому сравниваем цифры и не пишем в него без необходимости.
-  // NOT_DRAWN_YET - невозможная цифра, она означает "кэш ещё не заполнен".
-  const byte* digits = input.getDigits();
-
-  for (byte i = 0; i < 5; i++) {
-    if (displayedDigits[i] == NOT_DRAWN_YET || digits[i] != displayedDigits[i]) {
-      return true;
-    }
-  }
-
-  return false;
 }
