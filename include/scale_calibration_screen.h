@@ -12,6 +12,7 @@ public:
   ScaleCalibrationScreen(Display& display, Scale& scale);
   void enter();
   void loop(); // Ведёт сценарий: ноль, груз 1 кг, сохранение.
+  bool isDone() const;
   void handleEvent(ControlEvent event);
 
 private:

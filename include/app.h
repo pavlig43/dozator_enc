@@ -48,6 +48,7 @@ private:
   void openSelectedScreen();
   void openScreen(ScreenId screen);
   void openMenu(ScreenId screen);
+  bool shouldOpenMenuOnSelect(ControlEvent event) const;
   void selectMenuByEvent(ControlEvent event);
   static ScreenId menuScreenByEvent(ScreenId screen, ControlEvent event);
 };

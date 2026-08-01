@@ -45,6 +45,10 @@ void ScaleCalibrationScreen::handleEvent(ControlEvent event) {
   }
 }
 
+bool ScaleCalibrationScreen::isDone() const {
+  return step == Step::DONE;
+}
+
 void ScaleCalibrationScreen::beginTare() {
   display.showTare();
   scale.requestTare();

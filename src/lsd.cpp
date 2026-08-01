@@ -66,7 +66,7 @@ void Display::showScaleCalibrationDone() {
   lcd.setCursor(0, 0);
   lcd.print("OK saved");
   lcd.setCursor(0, 1);
-  lcd.print("MENU to exit");
+  lcd.print("Press to exit");
 }
 
 void Display::showWeightInput(unsigned long targetWeight) {

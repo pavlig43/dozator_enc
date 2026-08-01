@@ -41,7 +41,7 @@ void App::loop() {
     return;
   }
 
-  if (event == ControlEvent::MENU) {
+  if (event == ControlEvent::MENU || shouldOpenMenuOnSelect(event)) {
     openMenu(navigation.current());
     return;
   }
@@ -169,6 +169,24 @@ void App::openMenu(ScreenId screen) {
   selectedScreen = screen;
   menuActive = true;
   showMenu();
+}
+
+bool App::shouldOpenMenuOnSelect(ControlEvent event) const {
+  if (event != ControlEvent::SELECT) {
+    return false;
+  }
+
+  switch (navigation.current()) {
+  case ScreenId::WEIGHT_INPUT:
+  case ScreenId::FEED_SETTINGS:
+    return true;
+  case ScreenId::SCALE_CALIBRATION:
+    return scaleCalibrationScreen.isDone();
+  case ScreenId::WORK:
+    return false;
+  }
+
+  return false;
 }
 
 void App::selectMenuByEvent(ControlEvent event) {
