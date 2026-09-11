@@ -1,10 +1,9 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <HX711.h>
+#include "pin_destination.h"
 #include "scale_sensor.h"
 
-#define SCALE_DT_PIN 3
-#define SCALE_SCK_PIN 2
 #define SCALE_FACTOR 407.5
 #define SCALE_AVERAGE_SAMPLES 5
 // EEPROM 11 - marker, 12..15 - float с коэффициентом весов.

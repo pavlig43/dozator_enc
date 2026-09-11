@@ -2,8 +2,8 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include "lsd.h"
+#include "pin_destination.h"
 
-// SCL -> A5, SDA -> A4.
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 void Display::init() {

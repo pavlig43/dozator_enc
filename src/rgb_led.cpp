@@ -1,9 +1,6 @@
 #include <Arduino.h>
 #include "rgb_led.h"
-
-#define RGB_BLUE_PIN 7
-#define RGB_GREEN_PIN 6
-#define RGB_RED_PIN 5
+#include "pin_destination.h"
 
 void Rgb::off() {
   digitalWrite(RGB_BLUE_PIN, LOW);
