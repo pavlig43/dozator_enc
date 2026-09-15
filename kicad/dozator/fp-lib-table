@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+
+  (lib (name "dozator") (type "KiCad") (uri "${KIPRJMOD}/dozator.pretty") (options "") (descr "")))

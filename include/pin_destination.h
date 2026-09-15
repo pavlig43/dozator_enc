@@ -2,12 +2,12 @@
 
 // ATmega328P: номера совместимы с нумерацией Arduino Nano.
 
-#define SCALE_DT_PIN 9
-#define SCALE_SCK_PIN 10
+#define SCALE_DT_PIN A0
+#define SCALE_SCK_PIN A1
 
-#define RGB_RED_PIN 11
-#define RGB_GREEN_PIN 12
-#define RGB_BLUE_PIN 13
+#define RGB_RED_PIN 9
+#define RGB_GREEN_PIN 10
+#define RGB_BLUE_PIN 11
 
 // Нажимной энкодер:
 // S1  -> D7
