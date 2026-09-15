@@ -1,4 +1,5 @@
 (sym_lib_table
   (version 7)
 
-  (lib (name "dozator") (type "KiCad") (uri "${KIPRJMOD}/dozator.kicad_sym") (options "") (descr "")))
+  (lib (name "dozator") (type "KiCad") (uri "${KIPRJMOD}/dozator.kicad_sym") (options "") (descr ""))
+  (lib (name "my_lyb") (type "KiCad") (uri "${KIPRJMOD}/../libraries/my_lyb.kicad_sym") (options "") (descr "Portable personal symbol library")))
